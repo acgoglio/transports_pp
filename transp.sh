@@ -29,8 +29,8 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
      # Clean workdir
      echo "WARNING: I am going to remove all files in $ANA_WORKDIR ..."
      sleep 10
-     for TO_BE_RM in $( ls $ANA_WORKDIR ); do
-         rm $ANA_WORKDIR/$TO_BE_RM
+     for TO_BE_RM in $( ls $ANA_WORKDIR/*.txt $ANA_WORKDIR/*.ini* ); do
+         rm -v $TO_BE_RM
          echo $TO_BE_RM
      done
 
@@ -51,6 +51,7 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
               echo "Concatenating online transport infiles: $ONLINE_INFILE"
               cat ${ONLINE_INPATHS[${IDX_IN}]}/${ONLINE_INFILE}* > ${ONLINE_INFILE}_allv.txt || echo "NOT Found infile: $ONLINE_INFILE in path: ${ONLINE_INPATHS[$IDX_IN]}"
               for POST_NAME in ${ONLINE_SECTIONS_POST[@]}; do
+                 echo "PROVA: $POST_NAME"
                  grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep -v "2015010"  >> online_${ONLINE_INFILE}${POST_NAME}.txt
               done
          done
@@ -76,14 +77,15 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
        cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp1_volume_transport.txt
 
     elif [[ ${#PP_FILES[@]} == 2 ]] ; then
-       PP_FILE_1="${PP_INPATH_1}/${PP_FILES[1]}.nc"
-       PP_FILE_2="${PP_INPATH_2}/${PP_FILES[2]}.nc"
+       PP_FILE_1="${PP_INPATH_1}/${PP_FILES[0]}.nc"
+       PP_FILE_2="${PP_INPATH_2}/${PP_FILES[1]}.nc"
+       echo "PROVA: $PP_FILE_1 $PP_FILE_2"
        # Select dates 
        cdo seldate,${ANA_STARTDATE:0:4}-${ANA_STARTDATE:4:2}-${ANA_STARTDATE:6:2}T00:00:00,${ANA_ENDDATE:0:4}-${ANA_ENDDATE:4:2}-${ANA_ENDDATE:6:2}T23:30:00 $PP_FILE_1 seldate1.nc
        cdo seldate,${ANA_STARTDATE:0:4}-${ANA_STARTDATE:4:2}-${ANA_STARTDATE:6:2}T00:00:00,${ANA_ENDDATE:0:4}-${ANA_ENDDATE:4:2}-${ANA_ENDDATE:6:2}T23:30:00 $PP_FILE_2 seldate2.nc
        # Extract the values
-       cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD_1" | grep -v "1e+20" | grep -v "2015010" > pp1_volume_transport.txt
-       cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD_2" | grep -v "1e+20" | grep -v "2015010" > pp2_volume_transport.txt
+       cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD_1" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp1_volume_transport.txt
+       cdo outputtab,date,time,value,name seldate2.nc | grep "$PP_FIELD_2" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp2_volume_transport.txt
     else
          echo "Too many PP_INFILES: max 2!!!"
          exit
@@ -116,7 +118,7 @@ if [[ $ONLINE_FLAG == 1 ]] && [[ $PP_FLAG == 0 ]] ; then
           echo "set timefmt \"%Y%m%d\" " >> ${GNUPLOT_TRA_TMP}
           echo "set xrange [\"${ANA_STARTDATE}\":\"${ANA_ENDDATE}\"] " >> ${GNUPLOT_TRA_TMP}
           echo "set format x \"%d/%m/%Y\" " >> ${GNUPLOT_TRA_TMP}
-          echo "set ylabel \"Transport [Sv]\" " >> ${GNUPLOT_TRA_TMP}
+          echo "set ylabel \"Transport [${PP_UDM}]\" " >> ${GNUPLOT_TRA_TMP}
           echo "set grid " >> ${GNUPLOT_TRA_TMP}
           echo "set key Left" >> ${GNUPLOT_TRA_TMP} # 
           echo "set key outside" >> ${GNUPLOT_TRA_TMP} 
@@ -125,11 +127,15 @@ if [[ $ONLINE_FLAG == 1 ]] && [[ $PP_FLAG == 0 ]] ; then
           echo -en "plot" >> ${GNUPLOT_TRA_TMP}
           for TRA_ONLINE_POST in ${ONLINE_SECTIONS_POST[@]} ; do
               TRA_ONLINE_TXT=online_${ONLINE_INFILE}${TRA_ONLINE_POST}.txt
-              echo -en " '$TRA_ONLINE_TXT' using 1:${ONLINE_COL_NUM} with line lw 3 lt rgb '${ONLINE_COLOR}' title gprintf(\"Online${TRA_ONLINE_POST}  AVG = %g [Sv]   \", STAT${TRA_ONLINE_POST}_mean)," >> ${GNUPLOT_TRA_TMP}
+              echo -en " '$TRA_ONLINE_TXT' using 1:${ONLINE_COL_NUM} with line lw 3 lt rgb '${ONLINE_COLOR}' title gprintf(\"Online${TRA_ONLINE_POST}  AVG = %g [${PP_UDM}]   \", STAT${TRA_ONLINE_POST}_mean)," >> ${GNUPLOT_TRA_TMP}
           done
-          echo -en " STAT5_48_mean with line lw 3 lt rgb '${ONLINE_COLOR}' notitle," >> ${GNUPLOT_TRA_TMP}
+          if [[ ${ONLINE_SECTIONS} == "TRA_Gibraltar" ]]; then
+             echo -en " STAT_5_48_mean with line lw 3 lt rgb '${ONLINE_COLOR}' notitle," >> ${GNUPLOT_TRA_TMP}
+          elif [[ ${ONLINE_SECTIONS} == "TRA_Sicily" ]]; then
+             echo -en " STAT${TRA_ONLINE_POST}_mean with line lw 3 lt rgb '${ONLINE_COLOR}' notitle," >> ${GNUPLOT_TRA_TMP}
+          fi
           if [[ $OBS_FLAG == 1 ]]; then
-             echo -en " ${OBS_VAL} with line lw 3 lt rgb '${OBS_COLOR}' title \"OBS Soto-Navarro = ${OBS_VAL} [Sv]\"" >> ${GNUPLOT_TRA_TMP}
+             echo -en " ${OBS_VAL} with line lw 3 lt rgb '${OBS_COLOR}' title \"OBS Soto-Navarro = ${OBS_VAL} [${PP_UDM}]\"" >> ${GNUPLOT_TRA_TMP}
           fi
           # Plot
           gnuplot < $GNUPLOT_TRA_TMP  || echo "Prob with this plot..why?!"
@@ -154,7 +160,7 @@ elif [[ $ONLINE_FLAG == 1 ]] && [[ $PP_FLAG == 1 ]] ; then
               echo "stats '$TRA_ONLINE_TXT' using ${ONLINE_COL_NUM} name 'STAT${TRA_ONLINE_POST}' nooutput" >> ${GNUPLOT_TRA_TMP}
           done
           for TRA_PP_TXT in $( ls pp?_volume_transport.txt); do
-              echo "stats '$TRA_PP_TXT' using 3 name 'STAT_${TRA_PP_TXT:2:1}' nooutput" >> ${GNUPLOT_TRA_TMP}
+              echo "stats '$TRA_PP_TXT' using 3 name 'STATP_${TRA_PP_TXT:2:1}' nooutput" >> ${GNUPLOT_TRA_TMP}
           done
           
 
@@ -165,26 +171,38 @@ elif [[ $ONLINE_FLAG == 1 ]] && [[ $PP_FLAG == 1 ]] ; then
           echo "set timefmt \"%Y%m%d\" " >> ${GNUPLOT_TRA_TMP}
           echo "set xrange [\"${ANA_STARTDATE}\":\"${ANA_ENDDATE}\"] " >> ${GNUPLOT_TRA_TMP}
           echo "set format x \"%d/%m/%Y\" " >> ${GNUPLOT_TRA_TMP}
-          echo "set ylabel \"Transport [Sv]\" " >> ${GNUPLOT_TRA_TMP}
+          echo "set ylabel \"Transport [${PP_UDM}]\" " >> ${GNUPLOT_TRA_TMP}
           echo "set grid " >> ${GNUPLOT_TRA_TMP}
           echo "set key Left" >> ${GNUPLOT_TRA_TMP} # 
           echo "set key outside" >> ${GNUPLOT_TRA_TMP}
           echo "set xzeroaxis lt 2 lc rgb \"black\" lw 3" >> ${GNUPLOT_TRA_TMP}
+          #echo "set yrange [\"0.6\":\"1.2\"]" >> ${GNUPLOT_TRA_TMP}
 
           echo -en "plot" >> ${GNUPLOT_TRA_TMP}
-          IDX_PP=0
-          for TRA_PP_TXT in $( ls pp?_volume_transport.txt); do
-              echo -en " '$TRA_PP_TXT' using 1:3 with line lw 3 lt rgb '${PP_COLOR}' title gprintf(\"Postpr_${PP_INTAG[${IDX_PP}]}  AVG = %1.7g [Sv]   \", STAT_${TRA_PP_TXT:2:1}_mean)," >> ${GNUPLOT_TRA_TMP}
-              IDX_PP=$(( $IDX_PP + 1 ))
-          done
-          echo -en " STAT_${TRA_PP_TXT:2:1}_mean with line lw 3 lt rgb '${PP_COLOR}' notitle," >> ${GNUPLOT_TRA_TMP}
+          # ONLINE transports
+          IDX_ON=0
           for TRA_ONLINE_POST in ${ONLINE_SECTIONS_POST[@]} ; do
               TRA_ONLINE_TXT=online_${ONLINE_INFILE}${TRA_ONLINE_POST}.txt
-              echo -en " '$TRA_ONLINE_TXT' using 1:${ONLINE_COL_NUM} with line lw 3 lt rgb '${ONLINE_COLOR}' title gprintf(\"Online_${TRA_ONLINE_POST}  AVG = %1.7g [Sv]   \", STAT${TRA_ONLINE_POST}_mean)," >> ${GNUPLOT_TRA_TMP}
+              echo -en " '$TRA_ONLINE_TXT' using 1:${ONLINE_COL_NUM} with line lw 2 lt rgb '${ONLINE_COLOR[0]}' title gprintf(\"Online${TRA_ONLINE_POST}  AVG = %1.7g [${PP_UDM}]   \", STAT${TRA_ONLINE_POST}_mean)," >> ${GNUPLOT_TRA_TMP}
+              IDX_ON=$(( $IDX_ON + 1 ))
           done
-          echo -en " STAT5_48_mean with line lw 3 lt rgb '${ONLINE_COLOR}' notitle," >> ${GNUPLOT_TRA_TMP}
+          # PP transports
+          IDX_PP=0
+          for TRA_PP_TXT in $( ls pp?_volume_transport.txt); do
+              echo -en " '$TRA_PP_TXT' using 1:3 with line lw 2 lt rgb '${PP_COLOR[$IDX_PP]}' title gprintf(\"Postpr_${PP_INTAG[${IDX_PP}]}  AVG = %1.7g [${PP_UDM}]   \", STATP_${TRA_PP_TXT:2:1}_mean)," >> ${GNUPLOT_TRA_TMP}
+              IDX_PP=$(( $IDX_PP + 1 ))
+          done
+          # ONLINE mean
+          if [[ ${ONLINE_SECTIONS} == "TRA_Gibraltar" ]]; then
+             echo -en " STAT_5_48_mean with line lw 3 lt rgb '${ONLINE_COLOR[0]}' notitle ," >> ${GNUPLOT_TRA_TMP}
+          elif [[ ${ONLINE_SECTIONS} == "TRA_Sicily" ]]; then
+             echo -en " STAT${TRA_ONLINE_POST}_mean with line lw 3 lt rgb '${ONLINE_COLOR}' notitle," >> ${GNUPLOT_TRA_TMP}
+          fi
+          # PP mean
+          echo -en " STATP_1_mean with line lw 3 lt rgb '${PP_COLOR[0]}' notitle ," >> ${GNUPLOT_TRA_TMP}
+          # Obs
           if [[ $OBS_FLAG == 1 ]]; then
-             echo -en " ${OBS_VAL} with line lw 3 lt rgb '${OBS_COLOR}' title \"OBS Soto-Navarro = ${OBS_VAL} [Sv]\"" >> ${GNUPLOT_TRA_TMP}
+             echo -en " ${OBS_VAL} with line lw 3 lt rgb '${OBS_COLOR}' title \"OBS Soto-Navarro = ${OBS_VAL} [${PP_UDM}]\"" >> ${GNUPLOT_TRA_TMP}
           fi
           # Plot
           gnuplot < $GNUPLOT_TRA_TMP  || echo "Prob with this plot..why?!"
