@@ -1,0 +1,35 @@
+#
+set term jpeg size 1500,700 giant
+set output "tra_plotv_20160101_20180101_TRA_Gibraltar_N_zoom.jpg" 
+stats 'online_volume_transport_5_94.txt' using 11 name 'STAT_5_94' nooutput
+#stats 'online_volume_transport_5_48.txt' using 11 name 'STAT_5_48' nooutput
+#stats 'online_volume_transport_5_31.txt' using 11 name 'STAT_5_31' nooutput
+fitf(x)=y0+b*x+A_A*cos(0.00861071*x+phi_A)+A_S*cos(0.01721421*x+phi_S) #1day freq: y0+b*x+A_A*cos(0.01721421*x+phi_A)+A_S*cos(0.034428413*x+phi_S) 
+fit fitf(x) 'online_volume_transport_5_94.txt' using 0:11 via y0,b,A_A,A_S,phi_A,phi_S
+set title "volume_transport Time Series ( VAR: Outgoing Volume Transport Gibraltar  DT: 20160101 - 20180101 )" 
+set key opaque
+set xlabel "Date" 
+set xdata time 
+set timefmt "%Y%m%d" 
+set xrange ["20160101":"20161231"] 
+set format x "%m/%Y" 
+set xtics nomirror
+set x2tics
+set x2range ["2":"734"] #368 or 1464
+#fitf(x2)=y0+b*x2+A_A*cos(0.01721421*x2+phi_A)+A_S*cos(0.034428413*x2+phi_S)
+#fit fitf(x2) 'online_volume_transport_5_94.txt' using 0:11 via y0,b,A_A,A_S,phi_A,phi_S
+#set xlabel "Date"
+#set xrange ["20160101":"730"]
+#fitf(x)=y0+b*x+A_A*cos(0.01721421*x+phi_A)+A_S*cos(0.034428413*x+phi_S)
+#fit fitf(x) 'online_volume_transport_5_94.txt' using 0:11 via y0,b,A_A,A_S,phi_A,phi_S
+set ylabel "Transport [Sv]" 
+set grid 
+set key Left
+set key outside
+set xzeroaxis lt 2 lc rgb "black" lw 3
+#plot fitf(x) with line lw 3 lt 'black' title "Fit"
+set yrange ["-1.2":"-0.8"]
+#plot 'online_volume_transport_5_94.txt' using 0:11 axes x2y1 with line lw 2 lc 'gray' title "Online transp. (LON=5.94W)", fitf(x) axes x2y1 with line lw 3 lt rgb '#d62728' title 'Online transp. Fit (LON=5.94W)',-0.78 with line lw 3 lt rgb '#1f77b4' title "OBS Soto-Navarro = -0.78 [Sv]", STAT_5_94_mean with line lw 3 lt rgb '#ff7f0e' title "Online transp. Mean (LON=5.94W)"
+plot fitf(x) axes x2y1 with line lw 3 lt rgb '#d62728' title 'Online transp. Fit (LON=5.94W)', STAT_5_94_mean with line lw 3 lt rgb '#ff7f0e' title "Online transp. Mean (LON=5.94W)"
+#plot 'online_volume_transport_5_94.txt' using 1:11 with line lw 3 lt rgb '#d62728' title gprintf("Online_5_94  AVG = %g [Sv]   ", STAT_5_94_mean), -0.78 with line lw 3 lt rgb '#1f77b4' title "OBS Soto-Navarro = -0.78 [Sv]" , fitf(x) axes x2y1 with line lw 3 lc 'black' title "Fit"
+#'online_volume_transport_5_48.txt' using 1:11 with line lw 3 lt rgb '#d62728' title gprintf("Online_5_48  AVG = %g [Sv]   ", STAT_5_48_mean), 'online_volume_transport_5_31.txt' using 1:11 with line lw 3 lt rgb '#d62728' title gprintf("Online_5_31  AVG = %g [Sv]   ", STAT_5_31_mean), STAT_5_48_mean with line lw 3 lt rgb '#d62728' notitle, -0.78 with line lw 3 lt rgb '#1f77b4' title "OBS Soto-Navarro = -0.78 [Sv]"
