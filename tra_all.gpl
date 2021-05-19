@@ -1,0 +1,23 @@
+#
+#set term png size 1500,700 font "Times,16"
+set term pngcairo size 1700,700 font "Times-New-Roman,16"
+set output "volume_transp_20190101_20191231_TRA_Gibraltar_eas6.png" 
+stats 'online_volume_transport_5_48.txt' using 11 name 'STAT_in' nooutput
+stats 'online_volume_transport_5_48.txt' using 12 name 'STAT_out' nooutput
+stats 'online_volume_transport_5_48.txt' using 13 name 'STAT_net' nooutput
+set title "Volume Transports Gibraltar Strait ( 20190101 - 20191231 )" 
+#set key opaque
+set xlabel "Date" 
+set xdata time 
+set timefmt "%Y%m%d %H:%M:%S" 
+set xrange ["20190101":"20200101"] 
+set yrange ["-3.0":"3.0"]
+set format x "%m/%Y" 
+set ylabel "Transport [Sv]" 
+set grid 
+set key Left
+#set key outside
+set xzeroaxis lt 2 lc rgb "black" lw 3
+#plot 'incoming_online_volume_transport_5_48.txt' using 1:11 with line lw 3 lt rgb '#1f77b4' title gprintf("Incoming Transport:  AVG = %.3g [Sv]   ", STAT_in_mean), 'outgoing_online_volume_transport_5_48.txt' using 1:12 with line lw 3 lt rgb '#1f77b4' title gprintf("Outgoing Transport:  AVG = %.3g0 [Sv]   ", STAT_out_mean), 'online_volume_transport_5_48.txt' using 1:13 with line lw 3 lt rgb '#ff7f0e' title gprintf("Net Transport:  AVG = %.2g [Sv]   ", STAT_net_mean)
+#plot 'incoming_online_volume_transport_5_48.txt' using 1:11 with line lw 3 lt rgb '#d3d3d3' title gprintf("Incoming Transport:  AVG = %.3g [Sv]   ", STAT_in_mean), 'outgoing_online_volume_transport_5_48.txt' using 1:12 with line lw 3 lt rgb '#d3d3d3' title gprintf("Outgoing Transport:  AVG = %.3g0 [Sv]   ", STAT_out_mean), 'online_volume_transport_5_48.txt' using 1:13 with line lw 3 lt rgb '#d62728' title gprintf("Net Transport:  AVG = %.2g [Sv]   ", STAT_net_mean)
+plot 'online_volume_transport_5_48.txt' using 1:11 with line lw 3 lt rgb '#1f77b4' title gprintf("Incoming Transport:  AVG = %.3g [Sv]   ", STAT_in_mean), 'online_volume_transport_5_48.txt' using 1:12 with line lw 3 lt rgb '#ff7f0e' title gprintf("Outgoing Transport:  AVG = %.3g0 [Sv]   ", STAT_out_mean), 'online_volume_transport_5_48.txt' using 1:13 with line lw 3 lt rgb '#d62728' title gprintf("Net Transport:  AVG = %.2g [Sv]   ", STAT_net_mean)

@@ -51,8 +51,12 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
             echo "Concatenating online transport infiles: $ONLINE_INFILE"
             cat ${ONLINE_INPATHS[${IDX_IN}]}/${ONLINE_INFILE}* > ${ONLINE_INFILE}_allv.txt || echo "NOT Found infile: $ONLINE_INFILE in path: ${ONLINE_INPATHS[$IDX_IN]}"
             for POST_NAME in ${ONLINE_SECTIONS_POST[@]}; do
-              grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep -v "2015010"  >> online_${ONLINE_INFILE}${POST_NAME}.txt
-              
+              if [[ ${YEARLY_FLAG} == 0 ]]; then 
+                 grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep -v "2015"  >> online_${ONLINE_INFILE}${POST_NAME}.txt
+              else
+                 echo "Working on single year ${ANA_STARTDATE:0:4}"
+                 grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep "${ANA_STARTDATE:0:4}"  >> online_${ONLINE_INFILE}${POST_NAME}.txt
+              fi
               echo "NUMPERDAY= ${NUMPERDAY}"
               if [[ ${NUMPERDAY} == 1 ]]; then
                  echo "Adding HH:MM:SS to online_${ONLINE_INFILE}${POST_NAME}.txt file ..."
@@ -103,7 +107,6 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
     elif [[ ${#PP_FILES[@]} == 2 ]] ; then
        PP_FILE_1="${PP_INPATH_1}/${PP_FILES[0]}.nc"
        PP_FILE_2="${PP_INPATH_2}/${PP_FILES[1]}.nc"
-       echo "PROVA: $PP_FILE_1 $PP_FILE_2"
        # Select dates 
        cdo seldate,${ANA_STARTDATE:0:4}-${ANA_STARTDATE:4:2}-${ANA_STARTDATE:6:2}T00:00:00,${ANA_ENDDATE:0:4}-${ANA_ENDDATE:4:2}-${ANA_ENDDATE:6:2}T23:30:00 $PP_FILE_1 seldate1.nc
        cdo seldate,${ANA_STARTDATE:0:4}-${ANA_STARTDATE:4:2}-${ANA_STARTDATE:6:2}T00:00:00,${ANA_ENDDATE:0:4}-${ANA_ENDDATE:4:2}-${ANA_ENDDATE:6:2}T23:30:00 $PP_FILE_2 seldate2.nc
