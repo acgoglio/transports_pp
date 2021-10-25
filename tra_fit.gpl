@@ -28,7 +28,7 @@ set key Left
 set key outside
 set xzeroaxis lt 2 lc rgb "black" lw 3
 #plot fitf(x) with line lw 3 lt 'black' title "Fit"
-set yrange ["-1.2":"-0.8"]
+#set yrange ["-1.2":"-0.8"]
 #plot 'online_volume_transport_5_94.txt' using 0:11 axes x2y1 with line lw 2 lc 'gray' title "Online transp. (LON=5.94W)", fitf(x) axes x2y1 with line lw 3 lt rgb '#d62728' title 'Online transp. Fit (LON=5.94W)',-0.78 with line lw 3 lt rgb '#1f77b4' title "OBS Soto-Navarro = -0.78 [Sv]", STAT_5_94_mean with line lw 3 lt rgb '#ff7f0e' title "Online transp. Mean (LON=5.94W)"
 plot fitf(x) axes x2y1 with line lw 3 lt rgb '#d62728' title 'Online transp. Fit (LON=5.94W)', STAT_5_94_mean with line lw 3 lt rgb '#ff7f0e' title "Online transp. Mean (LON=5.94W)"
 #plot 'online_volume_transport_5_94.txt' using 1:11 with line lw 3 lt rgb '#d62728' title gprintf("Online_5_94  AVG = %g [Sv]   ", STAT_5_94_mean), -0.78 with line lw 3 lt rgb '#1f77b4' title "OBS Soto-Navarro = -0.78 [Sv]" , fitf(x) axes x2y1 with line lw 3 lc 'black' title "Fit"

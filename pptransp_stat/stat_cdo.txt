@@ -1,0 +1,20 @@
+# Versione CDO
+# metodo:
+cdo timmean /work/oda/ag15419/arc_link/eas5/exp_mrsp.sh_med_2016_2018/diag_base.xml/tra_t_gb_ts.nc eas5_t_gb_mean_1618.nc
+cdo timstd1 /work/oda/ag15419/arc_link/eas5/exp_mrsp.sh_med_2016_2018/diag_base.xml/tra_t_gb_ts.nc eas5_t_gb_std1_1618.nc
+cdo timmean /work/oda/ag15419/arc_link/eas5/exp_mrsp.sh_2017/diag_base.xml/tra_t_gb_ts.nc eas5_t_gb_mean.nc
+cdo timstd1 /work/oda/ag15419/arc_link/eas5/exp_mrsp.sh_2017/diag_base.xml/tra_t_gb_ts.nc eas5_t_gb_std1.nc
+# Risultato:
+# Per 2017 MEAN: 0.05823106 Sv STD1: 0.605777 Sv 
+# Per 2016-2018: MEAN=0.04064731 Sv STD1=0.5665841 Sv
+#--------------
+#
+# Verisone py
+# metodo: lancio stat.py
+# Risultato:
+# ---EAS5 2017---
+# mean(2017)= 0.05823106
+# std1(2017)= 0.60577697
+# ---EAS5 2016-2018---
+# mean(2016-2018)= 0.04064731
+# std1(2016-2018)= 0.5665841

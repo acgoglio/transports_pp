@@ -261,6 +261,31 @@ fi
 #
 #
 ####################### POSTPROC ###########################
+if [[ $ALL_FLAG == 1 ]]; then
+ALL_PLOT='all.gpl'
+cat << EOF > ${ALL_PLOT}
+set term pngcairo size 1700,700 font "Times-New-Roman,16"
+set output "volume_transp_${ANA_STARTDATE}_${ANA_ENDDATE}_${ONLINE_SECTIONS}_${ONLINE_INTAG}.png"
+stats 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 11 name 'STAT_in' nooutput
+stats 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 12 name 'STAT_out' nooutput
+stats 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 13 name 'STAT_net' nooutput
+set title "Volume Transports ${ONLINE_SECTIONS:4} Strait ( ${ANA_STARTDATE}-${ANA_ENDDATE} )"
+set xlabel "Date"
+set xdata time
+set timefmt "%Y%m%d %H:%M:%S"
+set xrange ["${ANA_STARTDATE}":"${ANA_ENDDATE}"]
+#set yrange ["-0.5":"0.5"]
+set format x "%m/%Y"
+set ylabel "Transport [Sv]"
+set grid
+set key Left
+#set key outside
+set xzeroaxis lt 2 lc rgb "black" lw 3
+plot 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 1:11 with line lw 3 lt rgb '#1f77b4' title gprintf("Incoming Transport:  AVG = %.3g [Sv]   ", STAT_in_mean), 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 1:12 with line lw 3 lt rgb '#ff7f0e' title gprintf("Outgoing Transport:  AVG = %.3g [Sv]   ", STAT_out_mean), 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 1:13 with line lw 3 lt rgb '#d62728' title gprintf("Net Transport:  AVG = %.2g [Sv]   ", STAT_net_mean)
+
+EOF
+   gnuplot <  ${ALL_PLOT}
+fi
 #
 ## Output check
 #

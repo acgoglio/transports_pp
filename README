@@ -1,0 +1,7 @@
+#
+# ENV: do not activate the virtual env mappyenv, just load all the modules 
+# Set ini file
+# Run the sh script
+#
+# If you want to put together all the transport (incoming, outgoing and net):
+# run the script for all the directions and set (and run) the all*.gpl script 
