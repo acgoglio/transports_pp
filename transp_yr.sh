@@ -8,9 +8,15 @@
 set -e
 #set -x 
 ################### PREPROC ###################################
+# start and end date
+ANA_STARTDATE=$2
+ANA_ENDDATE=$3
+
+MM=$4
+echo "Working on Month $MM"
 
 # Source ini file
-  source /users_home/oda/ag15419/transports_pp/transp_ana.ini
+  source /users_home/oda/med_dev/src_dev/online_transports_rea/transp_ana.ini
 
 # Set the environment
 echo "Setting the environment: $TRA_MODULE"
@@ -49,10 +55,18 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
     if [[ -d ${ONLINE_INPATHS[${IDX_IN}]} ]]; then
         for ONLINE_INFILE in ${ONLINE_INFILES[@]} ; do
             echo "Concatenating online transport infiles: $ONLINE_INFILE"
+            TAG_INFILE=$( echo $ONLINE_INFILE | cut -f 1 -d"_" )
+            echo "TAG: $TAG_INFILE"
             cat ${ONLINE_INPATHS[${IDX_IN}]}/${ONLINE_INFILE}* > ${ONLINE_INFILE}_allv.txt || echo "NOT Found infile: $ONLINE_INFILE in path: ${ONLINE_INPATHS[$IDX_IN]}"
             for POST_NAME in ${ONLINE_SECTIONS_POST[@]}; do
               if [[ ${YEARLY_FLAG} == 0 ]]; then 
-                 grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep -v "2015"  >> online_${ONLINE_INFILE}${POST_NAME}.txt
+                 if [[ $MM == "all" ]] ; then
+                    grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total"   >> online_${ONLINE_INFILE}${POST_NAME}.txt
+                 else
+                    echo "Cutting ${MM} from each year.."
+                    echo "grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep "^....${MM}.. ""
+                    grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep "^....${MM}.. "  >> online_${ONLINE_INFILE}${POST_NAME}.txt
+                 fi
               else
                  echo "Working on single year ${ANA_STARTDATE:0:4}"
                  grep "${ONLINE_SECTIONS}" ${ONLINE_INFILE}_allv.txt | grep "${POST_NAME}" | grep "total" | grep "${ANA_STARTDATE:0:4}"  >> online_${ONLINE_INFILE}${POST_NAME}.txt
@@ -86,7 +100,7 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
          rm *_allv.txt
          ONLINE_COL_NUM=$(( ${ONLINE_DIRECTION} + 10 ))
     else 
-      echo "ERROR: Input dir ${ANA_INPATHS[${IDX_IN}]} NOT FOUND!!"
+      echo "ERROR: Input dir ${ONLINE_INPATHS[${IDX_IN}]} NOT FOUND!!"
       exit
     fi
 
@@ -102,7 +116,7 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
        # Select dates 
        cdo seldate,${ANA_STARTDATE:0:4}-${ANA_STARTDATE:4:2}-${ANA_STARTDATE:6:2}T00:00:00,${ANA_ENDDATE:0:4}-${ANA_ENDDATE:4:2}-${ANA_ENDDATE:6:2}T23:30:00 $PP_FILE seldate1.nc
        # Extract the values
-       cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp1_volume_transport.txt
+       cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp1_${TAG_INFILE}_transport.txt
 
     elif [[ ${#PP_FILES[@]} == 2 ]] ; then
        PP_FILE_1="${PP_INPATH_1}/${PP_FILES[0]}.nc"
@@ -111,8 +125,8 @@ if [[ $ONLINE_FLAG == 1 ]] || [[ $PP_FLAG == 1 ]] ; then
        cdo seldate,${ANA_STARTDATE:0:4}-${ANA_STARTDATE:4:2}-${ANA_STARTDATE:6:2}T00:00:00,${ANA_ENDDATE:0:4}-${ANA_ENDDATE:4:2}-${ANA_ENDDATE:6:2}T23:30:00 $PP_FILE_1 seldate1.nc
        cdo seldate,${ANA_STARTDATE:0:4}-${ANA_STARTDATE:4:2}-${ANA_STARTDATE:6:2}T00:00:00,${ANA_ENDDATE:0:4}-${ANA_ENDDATE:4:2}-${ANA_ENDDATE:6:2}T23:30:00 $PP_FILE_2 seldate2.nc
        # Extract the values
-       cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD_1" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp1_volume_transport.txt
-       cdo outputtab,date,time,value,name seldate2.nc | grep "$PP_FIELD_2" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp2_volume_transport.txt
+       cdo outputtab,date,time,value,name seldate1.nc | grep "$PP_FIELD_1" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp1_${TAG_INFILE}_transport.txt
+       cdo outputtab,date,time,value,name seldate2.nc | grep "$PP_FIELD_2" | grep -v "1e+20" | grep -v "2015010" | sed -e "s/-//" | sed -e "s/-//" > pp2_${TAG_INFILE}_transport.txt
     else
          echo "Too many PP_INFILES: max 2!!!"
          exit
@@ -208,7 +222,7 @@ elif [[ $ONLINE_FLAG == 1 ]] && [[ $PP_FLAG == 1 ]] ; then
               #echo "set timefmt \"%Y%m%d\" " >> ${GNUPLOT_TRA_TMP}
               echo "stats '$TRA_ONLINE_TXT' using ${ONLINE_COL_NUM} name 'STAT${TRA_ONLINE_POST}' nooutput" >> ${GNUPLOT_TRA_TMP}
           done
-          for TRA_PP_TXT in $( ls pp?_volume_transport.txt); do
+          for TRA_PP_TXT in $( ls pp?_${TAG_INFILE}_transport.txt); do
               echo "stats '$TRA_PP_TXT' using 3 name 'STATP_${TRA_PP_TXT:2:1}' nooutput" >> ${GNUPLOT_TRA_TMP}
           done
           
@@ -237,7 +251,7 @@ elif [[ $ONLINE_FLAG == 1 ]] && [[ $PP_FLAG == 1 ]] ; then
           done
           # PP transports
           IDX_PP=0
-          for TRA_PP_TXT in $( ls pp?_volume_transport.txt); do
+          for TRA_PP_TXT in $( ls pp?_${TAG_INFILE}_transport.txt); do
               echo -en " '$TRA_PP_TXT' using 1:3 with line lw 2 lt rgb '${PP_COLOR[$IDX_PP]}' title \"Postpr_${PP_INTAG[${IDX_PP}]}\"," >> ${GNUPLOT_TRA_TMP}
               IDX_PP=$(( $IDX_PP + 1 ))
           done
@@ -265,10 +279,12 @@ if [[ $ALL_FLAG == 1 ]]; then
 ALL_PLOT='all.gpl'
 cat << EOF > ${ALL_PLOT}
 set term pngcairo size 1700,700 font "Times-New-Roman,16"
-set output "volume_transp_${ANA_STARTDATE}_${ANA_ENDDATE}_${ONLINE_SECTIONS}_${ONLINE_INTAG}.png"
-stats 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 11 name 'STAT_in' nooutput
-stats 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 12 name 'STAT_out' nooutput
-stats 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 13 name 'STAT_net' nooutput
+set output "${TAG_INFILE}_transp_${ANA_STARTDATE}_${ANA_ENDDATE}_${ONLINE_SECTIONS}_${ONLINE_INTAG}_${MM}.png"
+stats 'online_${TAG_INFILE}_transport${ONLINE_SECTIONS_POST}.txt' using 11 name 'STAT_in' nooutput
+stats 'online_${TAG_INFILE}_transport${ONLINE_SECTIONS_POST}.txt' using 12 name 'STAT_out' nooutput
+stats 'online_${TAG_INFILE}_transport${ONLINE_SECTIONS_POST}.txt' using 13 name 'STAT_net' nooutput
+set print '${TAG_INFILE}_transp_${ANA_STARTDATE}_${ANA_ENDDATE}_${ONLINE_SECTIONS}_${ONLINE_INTAG}_${MM}.dat'
+print STAT_in_mean,STAT_out_mean,STAT_net_mean
 set title "Volume Transports ${ONLINE_SECTIONS:4} Strait ( ${ANA_STARTDATE}-${ANA_ENDDATE} )"
 set xlabel "Date"
 set xdata time
@@ -281,7 +297,7 @@ set grid
 set key Left
 #set key outside
 set xzeroaxis lt 2 lc rgb "black" lw 3
-plot 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 1:11 with line lw 3 lt rgb '#1f77b4' title gprintf("Incoming Transport:  AVG = %.3g [Sv]   ", STAT_in_mean), 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 1:12 with line lw 3 lt rgb '#ff7f0e' title gprintf("Outgoing Transport:  AVG = %.3g [Sv]   ", STAT_out_mean), 'online_volume_transport${ONLINE_SECTIONS_POST}.txt' using 1:13 with line lw 3 lt rgb '#d62728' title gprintf("Net Transport:  AVG = %.2g [Sv]   ", STAT_net_mean)
+plot 'online_${TAG_INFILE}_transport${ONLINE_SECTIONS_POST}.txt' using 1:11 with line lw 3 lt rgb '#1f77b4' title gprintf("Incoming Transport:  AVG = %.3g [Sv]   ", STAT_in_mean), 'online_${TAG_INFILE}_transport${ONLINE_SECTIONS_POST}.txt' using 1:12 with line lw 3 lt rgb '#ff7f0e' title gprintf("Outgoing Transport:  AVG = %.3g [Sv]   ", STAT_out_mean), 'online_${TAG_INFILE}_transport${ONLINE_SECTIONS_POST}.txt' using 1:13 with line lw 3 lt rgb '#d62728' title gprintf("Net Transport:  AVG = %.2g [Sv]   ", STAT_net_mean)
 
 EOF
    gnuplot <  ${ALL_PLOT}

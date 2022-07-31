@@ -1,0 +1,22 @@
+set term pngcairo size 1700,1000 font "Times-New-Roman,16"
+set output "volume_transp_19930101_20191231_Gibraltar_REA_c6_monthly.png"
+stats 'volume_transp_19930101_20191231_Gibraltar_REA_c6_monthly.dat' using 3 name 'STAT_in' nooutput
+stats 'volume_transp_19930101_20191231_Gibraltar_REA_c6_monthly.dat' using 4 name 'STAT_out' nooutput
+stats 'volume_transp_19930101_20191231_Gibraltar_REA_c6_monthly.dat' using 5 name 'STAT_net' nooutput
+set multiplot layout 3,1 title "Gibraltar Strait Transport Monthly Climatology (1993-2019)"
+set xlabel "Month"
+#set xdata time
+#set timefmt "%Y%m%d %H:%M:%S"
+#set xrange ["19930101":"20191231"]
+set xrange ["1":"12"]
+set xtics 0,1,12
+#set format x "%m/%Y"
+set ylabel "Transport [Sv]"
+set grid
+set key Left
+#set key outside
+set xzeroaxis lt 2 lc rgb "black" lw 3
+plot 'volume_transp_19930101_20191231_Gibraltar_REA_c6_monthly.dat' using 1:3:xticlabel(2) with line lw 3 lt rgb '#1f77b4' title gprintf("Incoming Transport:  AVG = %.3g [Sv]   ", STAT_in_mean)
+plot 'volume_transp_19930101_20191231_Gibraltar_REA_c6_monthly.dat' using 1:4:xticlabel(2) with line lw 3 lt rgb '#ff7f0e' title gprintf("Outgoing Transport:  AVG = %.3g [Sv]   ", STAT_out_mean)
+plot 'volume_transp_19930101_20191231_Gibraltar_REA_c6_monthly.dat' using 1:5:xticlabel(2) with line lw 3 lt rgb '#d62728' title gprintf("Net Transport:  AVG = %.2g [Sv]   ", STAT_net_mean)
+
